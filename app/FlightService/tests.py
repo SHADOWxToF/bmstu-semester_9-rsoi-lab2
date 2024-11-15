@@ -27,7 +27,7 @@ def test_get_flights():
     assert responseJSON.totalElements == 1
     assert len(responseJSON.items) == 1
     item = responseJSON.items[0]
-    assert item.date == "2021-10-08 23:00"
+    assert item.date == "2021-10-08 20:00"
     assert item.flightNumber == flightNumber
     assert item.fromAirport == "Санкт-Петербург Пулково"
     assert item.toAirport == "Москва Шереметьево"
@@ -38,7 +38,7 @@ def test_get_flight():
     response = client.get(f'/api/v1/flights/{flightNumber}')
     assert response.status_code == 200
     responseJSON: FlightData = FlightData(**response.json())
-    assert responseJSON.date == "2021-10-08 23:00"
+    assert responseJSON.date == "2021-10-08 20:00"
     assert responseJSON.flightNumber == flightNumber
     assert responseJSON.fromAirport == "Санкт-Петербург Пулково"
     assert responseJSON.toAirport == "Москва Шереметьево"
