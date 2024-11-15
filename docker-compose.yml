@@ -9,12 +9,70 @@ services:
       POSTGRES_PASSWORD: "postgres"
       POSTGRES_DB: postgres
     volumes:
-      - db-data:/var/lib/postgresql/data
+      - ./db-data:/var/lib/postgresql/data
       - ./postgres/:/docker-entrypoint-initdb.d/
     ports:
       - "5432:5432"
+    networks:
+      - app
+  
+  flights:
+    depends_on: 
+      - postgres
+    container_name: flights
+    build:
+      dockerfile: ./app/FlightService/Dockerfile
+      args:
+        database_url: "postgresql://program:test@postgres:5432/flights"
+    ports:
+      - "8060:8060"
+    networks:
+      - app
+  
+  bonuses:
+    depends_on: 
+      - postgres
+    container_name: bonuses
+    build:
+      dockerfile: ./app/BonusService/Dockerfile
+      args:
+        database_url: "postgresql://program:test@postgres:5432/privileges"
+    ports:
+      - "8050:8050"
+    networks:
+      - app
+  
+  tickets:
+    depends_on: 
+      - postgres
+    container_name: tickets
+    build:
+      dockerfile: ./app/TicketService/Dockerfile
+      args:
+        database_url: "postgresql://program:test@postgres:5432/tickets"
+    ports:
+      - "8070:8070"
+    networks:
+      - app
+  
+  gateway:
+    depends_on: 
+      - postgres
+      - bonuses
+      - flights
+      - tickets
+    container_name: gateway
+    build:
+      dockerfile: ./app/GatewayService/Dockerfile
+    ports:
+      - "8080:8080"
+    networks:
+      - app
 
 # TODO добавить сервисы
+
+networks:
+  app:
 
 volumes:
   db-data:
