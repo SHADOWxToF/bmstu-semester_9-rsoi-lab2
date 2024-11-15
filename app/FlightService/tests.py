@@ -1,41 +1,45 @@
 from fastapi.testclient import *
 from main import app, engine
 from sqlmodel import SQLModel
+from database import *
+from fastapi.encoders import jsonable_encoder
+import uuid
 
 client = TestClient(app)
 
 SQLModel.metadata.create_all(engine)
 
-def test_get_persons():
-    response = client.get("/api/v1/persons")
+def test_init():
+    client.post('/manage/init')
+
+# - FlightService GET /api/v1/flights - возвращает все рейсы
+# - FlightService GET /api/v1/flights/{flightNumber} - возвращает 200 если такой рейс существует
+
+def test_get_flights():
+    flightNumber = "AFL031"
+    page = 1
+    size = 10
+    response = client.get(f'/api/v1/flights', params={"page": page, "size": size})
     assert response.status_code == 200
-    for person in response.json():
-        assert person.keys() == set(["id", "name", "age", "address", "work"])
+    responseJSON: FlightsResponse = FlightsResponse(**response.json())
+    assert responseJSON.page == page
+    assert responseJSON.pageSize == 1
+    assert responseJSON.totalElements == 1
+    assert len(responseJSON.items) == 1
+    item = responseJSON.items[0]
+    assert item.date == "2021-10-08 23:00"
+    assert item.flightNumber == flightNumber
+    assert item.fromAirport == "Санкт-Петербург Пулково"
+    assert item.toAirport == "Москва Шереметьево"
+    assert item.price == 1500
 
-def test_add_person():
-    response = client.post("/api/v1/persons", json={"name": "Ivan", "age": 25, "address": "Tverskaya", "work": "Google"})
-    assert response.status_code == 201
-    assert response.headers["Location"].split("/")[:-1] == ["", "api", "v1", "persons"]
-
-def test_bad_add_person():
-    response = client.post("/api/v1/persons", json={"age": 25, "address": "Tverskaya", "work": "Google"})
-    assert response.status_code == 400
-    assert response.json()["message"] == "what"
-
-def test_delete_person():
-    response = client.delete("/api/v1/persons/100")
-    assert response.status_code == 204
-
-def test_patch_person():
-    response = client.post("/api/v1/persons", json={"name": "Ivan", "age": 25, "address": "Tverskaya", "work": "Google"})
-    assert response.status_code == 201
-    assert response.headers["Location"].split("/")[:-1] == ["", "api", "v1", "persons"]
-    person_id = response.headers["Location"].split("/")[-1]
-    response = client.patch(f"api/v1/persons/{person_id}", json={"name": "Vasilii", "age": 50})
+def test_get_flight():
+    flightNumber = "AFL031"
+    response = client.get(f'/api/v1/flights/{flightNumber}')
     assert response.status_code == 200
-    assert response.json() == {"id": int(person_id), "name": "Vasilii", "age": 50, "address": "Tverskaya", "work": "Google"}
-
-
-def test_bad_patch_person():
-    response = client.patch(f"api/v1/persons/100", json={"name": "Vasilii", "age": 50})
-    assert response.status_code == 404
+    responseJSON: FlightData = FlightData(**response.json())
+    assert responseJSON.date == "2021-10-08 23:00"
+    assert responseJSON.flightNumber == flightNumber
+    assert responseJSON.fromAirport == "Санкт-Петербург Пулково"
+    assert responseJSON.toAirport == "Москва Шереметьево"
+    assert responseJSON.price == 1500

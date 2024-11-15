@@ -51,14 +51,16 @@ def health():
 
 @app.post('/manage/init')
 def init(session: SessionDep):
-    query = text("""insert into airport values
-(1, 'Шереметьево', 'Москва', 'Россия'),
-(2, 'Пулково', 'Санкт-Петербург', 'Россия');
-insert into flight values
-(1, 'AFL031', '2021/10/08 20:00', 2, 1, 1500)
-""")
-    session.exec(query)
-    session.commit()
+    query = text("""select * from airport where id=1""")
+    if not session.exec(query).first():
+        query = text("""insert into airport values
+    (1, 'Шереметьево', 'Москва', 'Россия'),
+    (2, 'Пулково', 'Санкт-Петербург', 'Россия');
+    insert into flight values
+    (1, 'AFL031', '2021/10/08 20:00', 2, 1, 1500)
+    """)
+        session.exec(query)
+        session.commit()
 
 # - FlightService GET /api/v1/flights - возвращает все рейсы
 # - FlightService GET /api/v1/flights/{flightNumber} - возвращает 200 если такой рейс существует

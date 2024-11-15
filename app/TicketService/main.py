@@ -12,8 +12,6 @@ import os
 import datetime as dt
 import uuid
 
-app = FastAPI()
-
 # TicketService
 
 # - TicketService GET /api/v1/tickets?name={UserName}
@@ -77,7 +75,7 @@ async def validation_exception_handler(request : Request, exc):
 
 # - TicketService POST /api/v1/tickets/, тело {билет} - 200
 @app.post('/api/v1/tickets/', status_code=201)
-def reduce_bonuses(newTicket: TicketDataJSON, session: SessionDep) -> TicketJSON:
+def post_ticket(newTicket: TicketDataJSON, session: SessionDep) -> TicketJSON:
     ticket = Ticket(username=newTicket.username, ticket_uid=uuid.uuid4(), flight_number=newTicket.flightNumber, price=newTicket.price, status='PAID')
     session.add(ticket)
     session.commit()
@@ -86,7 +84,7 @@ def reduce_bonuses(newTicket: TicketDataJSON, session: SessionDep) -> TicketJSON
 
 # - TicketService DELETE /api/v1/tickets/{ticketUid}, param: ticketUid - 201, 404
 @app.delete('/api/v1/tickets/{ticketUid}', status_code=201)
-def add_bonuses(ticketUid: str, session: SessionDep) -> TicketJSON:
+def delete_ticket(ticketUid: str, session: SessionDep) -> TicketJSON:
     query = select(Ticket).where(Ticket.ticket_uid == ticketUid)
     ticket = session.exec(query).first()
     if not ticket:

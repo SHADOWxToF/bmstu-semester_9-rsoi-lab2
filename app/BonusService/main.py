@@ -54,9 +54,11 @@ def health():
 
 @app.post('/manage/init')
 def init(session: SessionDep):
-    query = text("""insert into privilege values (1, 'Test Max', 'GOLD', 0), (2, 'aaa', 'GOLD', 800), (3, 'bbb', 'SILVER', 100)""")
-    session.exec(query)
-    session.commit()
+    query = text("""select * from privilege where id=1""")
+    if not session.exec(query).first():
+        query = text("""insert into privilege values (1, 'Test Max', 'GOLD', 0), (2, 'aaa', 'GOLD', 800), (3, 'bbb', 'SILVER', 100)""")
+        session.exec(query)
+        session.commit()
 
 @app.get('/api/v1/bonuses/{user_name}')
 def get_bonuses(user_name: str, session: SessionDep) -> PrivilegeDataJSON:
@@ -144,7 +146,7 @@ def calculate_price(calculatePriceJSON: CalculatePriceJSON, session: SessionDep)
 
 # - BonusService POST /api/v1/bonuses/cancel, тело {"name", "ticket"} - 400, 202 {"balance", "status"}, 404
 @app.post('/api/v1/bonuses/cancel', status_code=202)
-def calculate_price(cancelTicketJSON: CancelTicketJSON, session: SessionDep) -> PrivilegeDataJSON:
+def cancel(cancelTicketJSON: CancelTicketJSON, session: SessionDep) -> PrivilegeDataJSON:
     query = select(Privilege, PrivilegeHistory).where(Privilege.username == cancelTicketJSON.name).join(PrivilegeHistory, Privilege.id == PrivilegeHistory.privilege_id).where(PrivilegeHistory.ticket_uid == uuid.UUID(cancelTicketJSON.ticketUid))
     privilege_history = session.exec(query).first()
     if not privilege_history:
