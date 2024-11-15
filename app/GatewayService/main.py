@@ -12,13 +12,6 @@ import os
 import requests
 from http import HTTPStatus
 
-app = FastAPI()
-
-
-@app.get('/manage/health', status_code=200)
-def get_persons():
-    return
-
 # bonusesHost = "localhost:8050"
 # flightsHost = "localhost:8060"
 # ticketsHost = "localhost:8070"
@@ -28,6 +21,19 @@ ticketsHost = "tickets:8070"
 bonusesAPI = f"{bonusesHost}/api/v1"
 flightsAPI = f"{flightsHost}/api/v1"
 ticketsAPI = f"{ticketsHost}/api/v1"
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    requests.post(f"http://{flightsHost}/manage/init")
+    requests.post(f"http://{bonusesHost}/manage/init")
+    yield
+
+app = FastAPI(lifespan=lifespan)
+
+
+@app.get('/manage/health', status_code=200)
+def get_persons():
+    return
 
 
 @app.get('/api/v1/flights', status_code=200)

@@ -26,6 +26,7 @@ engine = create_engine(database_url)
 
 def create_db_and_tables():
     SQLModel.metadata.create_all(engine)
+    print('asdad')
 
 
 def get_session():
@@ -47,6 +48,17 @@ app = FastAPI(lifespan=lifespan)
 @app.get('/manage/health', status_code=200)
 def health():
     return Response(status_code=200)
+
+@app.post('/manage/init')
+def init(session: SessionDep):
+    query = text("""insert into airport values
+(1, 'Шереметьево', 'Москва', 'Россия'),
+(2, 'Пулково', 'Санкт-Петербург', 'Россия');
+insert into flight values
+(1, 'AFL031', '2021/10/08 20:00', 2, 1, 1500)
+""")
+    session.exec(query)
+    session.commit()
 
 # - FlightService GET /api/v1/flights - возвращает все рейсы
 # - FlightService GET /api/v1/flights/{flightNumber} - возвращает 200 если такой рейс существует
